@@ -9,6 +9,7 @@ import {
 import {
   CloudFrontWebDistribution,
   OriginAccessIdentity,
+  PriceClass,
 } from "aws-cdk-lib/aws-cloudfront";
 import { NodejsBuild } from "deploy-time-build";
 import { Auth } from "./auth";
@@ -42,6 +43,7 @@ export class Frontend extends Construct {
       "OriginAccessIdentity"
     );
     const distribution = new CloudFrontWebDistribution(this, "Distribution", {
+      priceClass: PriceClass.PRICE_CLASS_200, //or PRICE_CLASS_ALL
       originConfigs: [
         {
           s3OriginSource: {

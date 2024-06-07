@@ -76,5 +76,6 @@ const chat = new BedrockChatStack(app, `BedrockChatStack`, {
   embeddingContainerVcpu: EMBEDDING_CONTAINER_VCPU,
   embeddingContainerMemory: EMBEDDING_CONTAINER_MEMORY,
   selfSignUpEnabled: SELF_SIGN_UP_ENABLED,
+  natgateways: 1,
 });
 chat.addDependency(waf);

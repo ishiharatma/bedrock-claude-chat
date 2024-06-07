@@ -36,7 +36,16 @@ export interface BedrockChatStackProps extends StackProps {
   readonly enableMistral: boolean;
   readonly embeddingContainerVcpu: number;
   readonly embeddingContainerMemory: number;
-  readonly selfSignUpEnabled: boolean;
+  readonly selfSignUpEnabled: boolean;  /**
+  * The number of NAT Gateways/Instances to create.
+  * @default 1
+  */
+ readonly natgateways?: number;
+ /**
+  * Nat Instance Type
+  * @default t4.nano
+  */
+ readonly natInstanceType?: string;
 }
 
 export class BedrockChatStack extends cdk.Stack {
@@ -47,7 +56,23 @@ export class BedrockChatStack extends cdk.Stack {
     });
     const cronSchedule = createCronSchedule(props.rdsSchedules);
 
-    const vpc = new ec2.Vpc(this, "VPC", {});
+    const natGateways: number = props.natgateways ?? 0;
+    const natInstance = ec2.NatProvider.instanceV2({
+      instanceType: props.natInstanceType
+                    ? new ec2.InstanceType(props.natInstanceType)
+                    : ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.NANO),
+      machineImage: ec2.MachineImage.latestAmazonLinux2023({
+        edition: ec2.AmazonLinuxEdition.STANDARD,
+        cpuType: ec2.AmazonLinuxCpuType.ARM_64 //X86_64, 
+      }),
+      defaultAllowedTraffic: ec2.NatTrafficDirection.OUTBOUND_ONLY,
+    });
+
+    const vpc = new ec2.Vpc(this, "VPC", {
+      natGateways: natGateways,
+      natGatewaySubnets: {subnetType: ec2.SubnetType.PUBLIC},
+      natGatewayProvider: natInstance,
+    });
     vpc.publicSubnets.forEach((subnet) => {
       (subnet.node.defaultChild as ec2.CfnSubnet).mapPublicIpOnLaunch = false;
     });
